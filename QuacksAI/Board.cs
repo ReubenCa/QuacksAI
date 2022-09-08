@@ -9,7 +9,7 @@ namespace QuacksAI
     /// <summary>
     /// Provides Utility functions for implementing rules of game
     /// </summary>
-    internal static class Board
+    public static class Board
     {
         /// <summary>
         /// Randomly Selects a token and returns the BrewData state after it is drawn
@@ -17,26 +17,26 @@ namespace QuacksAI
         /// <param name="Data"></param>
         /// <param name="BlueDecisionNeeded"></param>
         /// <returns></returns>
-        public static PlayerBrewData DrawChip(PlayerBrewData Data, out bool BlueDecisionNeeded, out bool Exploded)
+        public static PlayerBrewData DrawChip(PlayerBrewData Data, out bool BlueDecisionNeeded, out bool Exploded, out Token TokenDrawn)
         {
-            Token t = Data.tokensinbag.ElementAt(Consts.r.Next(Data.tokensinbag.Count));
-            return DrawChip(Data, t, out BlueDecisionNeeded, out Exploded);
+            TokenDrawn = Data.tokensinbag.ElementAt(Consts.r.Next(Data.tokensinbag.Count));
+            return DrawChip(Data, TokenDrawn, out BlueDecisionNeeded, out Exploded);
         }
         public static PlayerBrewData DrawChip(PlayerBrewData Data, Token t, out bool BlueDecisionNeeded, out bool Exploded)
         {
             Exploded = false;
             BlueDecisionNeeded = false;
-            PlayerBrewData PBD = new PlayerBrewData();
+            //PlayerBrewData PBD = new PlayerBrewData();
 
-            HashSet<Token> bag = new HashSet<Token>(Data.tokensinbag);
+            List<Token> bag = new List<Token>(Data.tokensinbag);
             List<Token> tokens = new List<Token>(Data.PlacedTokens);
 
-            PBD.tokensinbag = bag;
-            PBD.PlacedTokens = tokens;
+            //PBD.tokensinbag = bag;
+            //PBD.PlacedTokens = tokens;
 
             bag.Remove(t);
             tokens.Add(t);
-            int NewCurrentTile = Data.CurrentTile + t.TokenValue;
+            int NewCurrentTile = Data.CurrentTile + t.Value;
             switch (t.Color)
             {
                 case TokenColor.red:
@@ -57,11 +57,11 @@ namespace QuacksAI
                     BlueDecisionNeeded = true;
                     break;
                 case TokenColor.white:
-                    Exploded = tokens.Select<Token, int>(t => t.Color == TokenColor.white ? t.TokenValue : 0).Sum() > 7;
+                    Exploded = tokens.Select<Token, int>(t => t.Color == TokenColor.white ? t.Value : 0).Sum() > 7;
                     break;
             }
-            PBD.CurrentTile = NewCurrentTile;
-            return PBD;
+            //PBD.CurrentTile = NewCurrentTile;
+            return new PlayerBrewData(bag, tokens,NewCurrentTile);
         }
 
 

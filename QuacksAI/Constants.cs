@@ -21,6 +21,6 @@ namespace QuacksAI
             return;
         }
 
-       public static readonly Random r = new Random(0);
+       public static readonly Random r = new Random();
     }
 }
