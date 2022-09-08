@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32516.85
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuacksAI", "QuacksAI.csproj", "{42288139-EA31-4B10-B6D5-A7018DAD20B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "..\Tests\Tests.csproj", "{3AA71882-51BB-481E-B72B-4BE364002C20}"
+	ProjectSection(ProjectDependencies) = postProject
+		{42288139-EA31-4B10-B6D5-A7018DAD20B0} = {42288139-EA31-4B10-B6D5-A7018DAD20B0}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{42288139-EA31-4B10-B6D5-A7018DAD20B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42288139-EA31-4B10-B6D5-A7018DAD20B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42288139-EA31-4B10-B6D5-A7018DAD20B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42288139-EA31-4B10-B6D5-A7018DAD20B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3AA71882-51BB-481E-B72B-4BE364002C20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AA71882-51BB-481E-B72B-4BE364002C20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AA71882-51BB-481E-B72B-4BE364002C20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AA71882-51BB-481E-B72B-4BE364002C20}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {62AE0C08-06FC-426E-9F53-0C50BF1BB705}
+	EndGlobalSection
+EndGlobal
