@@ -40,58 +40,15 @@ namespace Tests
         //    }
         //    return RubyUtil + MoneyUtil + VPUtil;
         //}
-        private PlayerBrewData PlayTestRound(IBrew ai, (Token, int)[] TokensInBag, out bool Exploded, bool loggame)
-        {
-            List<Token> tokens = new List<Token>();
-            foreach ((Token, int) token in TokensInBag)
-            {
-                for (int i = 0; i < token.Item2; i++)
-                {
-                    tokens.Add(token.Item1);
-                }
-            }
-            TokensInBag = null;
-            List<Token> tokensonboard = new List<Token>(35);
-            PlayerBrewData Data = new PlayerBrewData(tokens, tokensonboard, 1);
 
-            
-
-            Exploded = false;
-
-            while (!Exploded && ai.Brew(Data))
-            {
-                Data = Board.DrawChip(Data, out _, out Exploded, out Token Drawn);
-                if (loggame)
-                {
-                    Console.WriteLine(Drawn);
-                }
-            }
-            if (loggame)
-            {
-                if (Exploded)
-                {
-                    Console.WriteLine("Exploded :(");
-                }
-                else
-                {
-                    Console.WriteLine("Stopped");
-                }
-                Console.WriteLine(Consts.Board[Data.CurrentTile]);
-            }
-            return Data;
-        }
         
-        private PlayerBrewData PlayTestRound(float RubyWeight, float MoneyWeight, float VPWeight, (Token,int)[] TokensInBag, out bool Exploded, bool loggame)
-        {
-            AI ai = new AI(new AIDynamicBrewingParameters(VPWeight, MoneyWeight,RubyWeight), new AIStaticBrewingParameters());
-            return PlayTestRound(ai, TokensInBag, out Exploded, loggame);
-        }
+ 
 
         [TestMethod]
         public void CanDecideToBrew()
         {
             (Token, int)[] startingtokens = new (Token, int)[] { (Tokens.White3, 1), (Tokens.White2, 2), (Tokens.White1, 4), (Tokens.Green1, 1), (Tokens.Orange1, 1) };
-            PlayTestRound(0, 1f, 4f, startingtokens, out _, true);
+            TestUtilities.PlayTestRound(0, 1f, 4f, startingtokens, out _, true);
         }
         [TestMethod]
         public void AlwaysExplodesWhenVPAreWorthless()
@@ -100,7 +57,7 @@ namespace Tests
             {
                 bool Exploded;
                 (Token, int)[] startingtokens = new (Token, int)[] { (Tokens.White3, 1), (Tokens.White2, 2), (Tokens.White1, 4), (Tokens.Green1, 1), (Tokens.Orange1, 1) };
-                PlayTestRound(0, 1f, 0f, startingtokens, out Exploded, true);
+                TestUtilities.PlayTestRound(0, 1f, 0f, startingtokens, out Exploded, true);
                 Assert.IsTrue(Exploded);
             }
         }
@@ -115,7 +72,7 @@ namespace Tests
             {
                 bool Exploded;
                 (Token, int)[] startingtokens = new (Token, int)[] { (Tokens.White3, 1), (Tokens.White2, 2), (Tokens.White1, 4), (Tokens.Green1, 1), (Tokens.Orange1, 1) };
-                PlayTestRound(0, 100f, 10f, startingtokens, out Exploded, false);
+                TestUtilities.PlayTestRound(0, 100f, 10f, startingtokens, out Exploded, false);
                if(Exploded)
                 {
                     exploded++;
@@ -137,7 +94,9 @@ namespace Tests
             int AIwins = 0;
             int Randomwins=0;
             int Draws = 0;
-
+            int AIScenarioWins = 0;
+            int RandomScenarioWins = 0;
+            int DrawnScenarios = 0;
             for (int i = 0; i < Scenarios; i++)
             {
                 (Token, int)[] StartingBag = new (Token, int)[Consts.r.Next(3, MaxTokenTypes)];
@@ -155,15 +114,17 @@ namespace Tests
                 RandomAI random = new RandomAI(0.6 + 0.3*Math.Max(VPWeight,MoneyWeight)/(VPWeight+MoneyWeight));
 
 
-
+                int AIWinsThisScenario = 0;
+                int RandomWinsThisScenario = 0;
                 for (int k = 0;k <GamesPerScenario;k++)
                 {
+
                     //Console.WriteLine("--------\nAI:");
-                    PlayerBrewData AIDat = PlayTestRound(ai, StartingBag, out _, false);
+                    PlayerBrewData AIDat = TestUtilities.PlayTestRound(ai, StartingBag, out _, false);
                     float AIScore = AI.ScoreIfStopOrExplode(RubyWeight, MoneyWeight, VPWeight, AIDat, out bool _);
                     //Console.WriteLine("AI Score: " + AIScore);
                     //Console.WriteLine("--------\nRandom:");
-                    PlayerBrewData RandomDat = PlayTestRound(random,StartingBag, out _, false);
+                    PlayerBrewData RandomDat = TestUtilities.PlayTestRound(random,StartingBag, out _, false);
                    
                     
                     float randomScore = AI.ScoreIfStopOrExplode(RubyWeight, MoneyWeight, VPWeight, RandomDat, out bool _);
@@ -171,13 +132,27 @@ namespace Tests
                     if (AIScore == randomScore)
                         Draws++;
                     else if (AIScore > randomScore)
+                    {
                         AIwins++;
+                        AIWinsThisScenario++;
+                    }
                     else
+                    {
                         Randomwins++;
+                        RandomWinsThisScenario++;
+                    }
                 }
+                if (AIWinsThisScenario == RandomWinsThisScenario)
+                    DrawnScenarios++;
+                else if (AIWinsThisScenario < RandomWinsThisScenario)
+                    RandomScenarioWins++;
+                else
+                    AIScenarioWins++;
             }
-            Console.WriteLine("AIWins: {0} vs RandomWins: {1} (Draws: {2})\nWin Rate: {3}%", AIwins, Randomwins, Draws,(float)(AIwins) / (float)(AIwins + Randomwins));
-            Assert.IsTrue((float)(AIwins) / (float)(AIwins + Randomwins) > PassCriteria);
+            float OverallWinRAte = (float)(AIwins) / (float)(AIwins + Randomwins);
+            float ScenarioWinRate = (float)AIScenarioWins / (float)(AIScenarioWins + RandomScenarioWins);
+            Console.WriteLine("AIWins: {0} vs RandomWins: {1} (Draws: {2})\nWin Rate:\t{3}%\nScenarioWinRate:\t{4}%", AIwins, Randomwins, Draws, OverallWinRAte,ScenarioWinRate);
+            Assert.IsTrue(OverallWinRAte > PassCriteria);
         }
     }
 }
