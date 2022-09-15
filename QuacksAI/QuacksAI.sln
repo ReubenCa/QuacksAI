@@ -5,10 +5,12 @@ VisualStudioVersion = 17.2.32516.85
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuacksAI", "QuacksAI.csproj", "{42288139-EA31-4B10-B6D5-A7018DAD20B0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "..\Tests\Tests.csproj", "{3AA71882-51BB-481E-B72B-4BE364002C20}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "..\Tests\Tests.csproj", "{3AA71882-51BB-481E-B72B-4BE364002C20}"
 	ProjectSection(ProjectDependencies) = postProject
 		{42288139-EA31-4B10-B6D5-A7018DAD20B0} = {42288139-EA31-4B10-B6D5-A7018DAD20B0}
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrewingTestUI", "..\BrewingTestUI\BrewingTestUI.csproj", "{095FC814-CD9F-4D3E-BED4-DCFB2B838341}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,6 +26,10 @@ Global
 		{3AA71882-51BB-481E-B72B-4BE364002C20}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3AA71882-51BB-481E-B72B-4BE364002C20}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3AA71882-51BB-481E-B72B-4BE364002C20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{095FC814-CD9F-4D3E-BED4-DCFB2B838341}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{095FC814-CD9F-4D3E-BED4-DCFB2B838341}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{095FC814-CD9F-4D3E-BED4-DCFB2B838341}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{095FC814-CD9F-4D3E-BED4-DCFB2B838341}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

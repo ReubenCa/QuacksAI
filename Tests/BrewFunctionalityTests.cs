@@ -1,59 +1,45 @@
-using QuacksAI;
+
 
 namespace Tests
 {
     [TestClass]
     public class BrewTests
     {
-        private Token RandomTokenGenerator(bool AllowWhites)
-        {
-            int[] vals = new int[] { 1, 2, 4 };
-            Type type = typeof(TokenColor);
-            Array values = type.GetEnumValues();
-            int index = Consts.r.Next(values.Length);
-            TokenColor color = TokenColor.orange;
-            while (AllowWhites || color != TokenColor.white)
-            {
-                color = (TokenColor)values.GetValue(index);
-            }
-            if (color == TokenColor.white)
-                return new Token(color, Consts.r.Next(0, 4));
-            return new Token(color, vals[Consts.r.Next(0, vals.Length)]);
-        }
-        
-        private float CalculateScore(float RubyWeight, float MoneyWeight, float VPWeight, PlayerBrewData Data)
-        {
-            List<Token> Bag = Data.tokensinbag;
-            List<Token> TokensOnBoard = Data.PlacedTokens;
-            int CurrentTile = Data.CurrentTile;
+
+        //TODO: The Calcualte Score function should be combined with the almost identical code in the AI into one function
+        //private float CalculateScore(float RubyWeight, float MoneyWeight, float VPWeight, PlayerBrewData Data)
+        //{
+        //    List<Token> Bag = Data.tokensinbag;
+        //    List<Token> TokensOnBoard = Data.PlacedTokens;
+        //    int CurrentTile = Data.CurrentTile;
 
 
-            (int Money, int VP, bool Ruby) tile = Consts.Board[CurrentTile];
+        //    (int Money, int VP, bool Ruby) tile = Consts.Board[CurrentTile];
 
 
-            //if blown up just return the current score
+        //    //if blown up just return the current score
 
-            float VPUtil = VPWeight * tile.VP;
-            float MoneyUtil = MoneyWeight * tile.Money;
-            float Rubies = 0f;
+        //    float VPUtil = VPWeight * tile.VP;
+        //    float MoneyUtil = MoneyWeight * tile.Money;
+        //    float Rubies = 0f;
 
-            if (TokensOnBoard.Count == 0)
-                Rubies = 0f;
-            else if (TokensOnBoard.Count == 1)
-                Rubies = TokensOnBoard[0].Color == TokenColor.green ? 1f : 0f;
-            else
-            {
-                Rubies += TokensOnBoard[TokensOnBoard.Count - 1].Color == TokenColor.green ? 1f : 0f;
-                Rubies += TokensOnBoard[TokensOnBoard.Count - 2].Color == TokenColor.green ? 1f : 0f;
-            }
-            Rubies += tile.Ruby ? 1f : 0f;
-            float RubyUtil = Rubies * RubyWeight;
-            if (TokensOnBoard.Where(t => t.Color == TokenColor.white).Select<Token, int>(t => t.Value).Sum() > 7)
-            {
-                return RubyUtil + Math.Max(MoneyUtil, VPUtil);
-            }
-            return RubyUtil + MoneyUtil + VPUtil;
-        }
+        //    if (TokensOnBoard.Count == 0)
+        //        Rubies = 0f;
+        //    else if (TokensOnBoard.Count == 1)
+        //        Rubies = TokensOnBoard[0].Color == TokenColor.green ? 1f : 0f;
+        //    else
+        //    {
+        //        Rubies += TokensOnBoard[TokensOnBoard.Count - 1].Color == TokenColor.green ? 1f : 0f;
+        //        Rubies += TokensOnBoard[TokensOnBoard.Count - 2].Color == TokenColor.green ? 1f : 0f;
+        //    }
+        //    Rubies += tile.Ruby ? 1f : 0f;
+        //    float RubyUtil = Rubies * RubyWeight;
+        //    if (TokensOnBoard.Where(t => t.Color == TokenColor.white).Select<Token, int>(t => t.Value).Sum() > 7)
+        //    {
+        //        return RubyUtil + Math.Max(MoneyUtil, VPUtil);
+        //    }
+        //    return RubyUtil + MoneyUtil + VPUtil;
+        //}
         private PlayerBrewData PlayTestRound(IBrew ai, (Token, int)[] TokensInBag, out bool Exploded, bool loggame)
         {
             List<Token> tokens = new List<Token>();
@@ -122,7 +108,7 @@ namespace Tests
         [TestMethod]
         public void AlmostAlwaysExplodeswithlowVPWeight()
         {
-            const int trials = 500;
+            const int trials = 200;
             const float PassCriteria = 0.95f;
             int exploded = 0;
             for (int i = 0; i < trials; i++)
@@ -142,14 +128,15 @@ namespace Tests
         [TestMethod]
         public void OutPerformsRandom()
         {
-            const float PassCriteria = 0.98f;
-            const int Scenarios = 200;
-            const int GamesPerScenario = 5;
-            const int MaxTokenTypes = 3;
+            const float PassCriteria = 0.55f;
+            const int Scenarios = 100;
+            const int GamesPerScenario = 100;
+            const int MaxTokenTypes = 4;
             const int MaxTokensofType = 5;
 
             int AIwins = 0;
             int Randomwins=0;
+            int Draws = 0;
 
             for (int i = 0; i < Scenarios; i++)
             {
@@ -159,7 +146,7 @@ namespace Tests
                 StartingBag[2] = (Tokens.White1, 4);
                 for(int j = 3; j<StartingBag.Length; j++)
                 {
-                    StartingBag[j] = (RandomTokenGenerator(false), Consts.r.Next(1, MaxTokensofType+1));
+                    StartingBag[j] = (TestUtilities.RandomTokenGenerator(false), Consts.r.Next(1, MaxTokensofType+1));
                 }
                 float RubyWeight = (float)(Consts.r.NextDouble()*Consts.r.Next(0,20));
                 float MoneyWeight = (float)(Consts.r.NextDouble() * Consts.r.Next(0, 4));
@@ -167,20 +154,29 @@ namespace Tests
                 AI ai = new AI(new AIDynamicBrewingParameters(VPWeight, MoneyWeight, RubyWeight, 0f, 0f), new AIStaticBrewingParameters());
                 RandomAI random = new RandomAI(0.6 + 0.3*Math.Max(VPWeight,MoneyWeight)/(VPWeight+MoneyWeight));
 
+
+
                 for (int k = 0;k <GamesPerScenario;k++)
                 {
+                    //Console.WriteLine("--------\nAI:");
                     PlayerBrewData AIDat = PlayTestRound(ai, StartingBag, out _, false);
+                    float AIScore = AI.ScoreIfStopOrExplode(RubyWeight, MoneyWeight, VPWeight, AIDat, out bool _);
+                    //Console.WriteLine("AI Score: " + AIScore);
+                    //Console.WriteLine("--------\nRandom:");
                     PlayerBrewData RandomDat = PlayTestRound(random,StartingBag, out _, false);
-                    (int Money, int VP, bool Ruby) AITile = Consts.Board[AIDat.CurrentTile];
-                    float AIScore = CalculateScore(RubyWeight, MoneyWeight, VPWeight, AIDat);
-                    float randomScore = CalculateScore(RubyWeight, MoneyWeight, VPWeight, RandomDat);
-                    if (AIScore > randomScore)
+                   
+                    
+                    float randomScore = AI.ScoreIfStopOrExplode(RubyWeight, MoneyWeight, VPWeight, RandomDat, out bool _);
+                    //Console.WriteLine("Random Score" + randomScore);
+                    if (AIScore == randomScore)
+                        Draws++;
+                    else if (AIScore > randomScore)
                         AIwins++;
                     else
                         Randomwins++;
                 }
             }
-            Console.WriteLine("AIWins: {0} vs RandomWins: {1}", AIwins, Randomwins);
+            Console.WriteLine("AIWins: {0} vs RandomWins: {1} (Draws: {2})\nWin Rate: {3}%", AIwins, Randomwins, Draws,(float)(AIwins) / (float)(AIwins + Randomwins));
             Assert.IsTrue((float)(AIwins) / (float)(AIwins + Randomwins) > PassCriteria);
         }
     }
