@@ -5,6 +5,22 @@ namespace QuacksAI
     public partial class AI : IBrew
         //Has an interace for brewing and buying to allow for easy UI that can also be made for players
     {
+        //Static so AIs all share a Cache
+        private readonly static Dictionary<object, (float, bool)> _sharedcache = new Dictionary<object, (float, bool)>() ;
+        private readonly Dictionary<object, (float, bool)> _privatecache = new Dictionary<object, (float, bool)>();
+        
+        private Dictionary<object, (float, bool)> Cache
+        {
+            get
+            {
+                if (Parameters.SharedCaching)
+                    return _sharedcache;
+                return _privatecache;
+            }
+        }
+
+
+
         private AIDynamicBrewingParameters DynamicBrewingParameters;
         private AIStaticBrewingParameters StaticBrewingParameters;
 
@@ -42,16 +58,20 @@ namespace QuacksAI
             int WhiteTotal = placed.Where(t => t.Color == TokenColor.white).Select<Token, int>(t => t.Value).Sum();
 
             //TODO: update this so it factors in the chance of getting rubies - low priority as it is mainly hypothetical of stopping here for rubies
-            //if (WhiteTotal + data.tokensinbag.Select<Token,int>(t => t.Color==TokenColor.white ? t.Value : 0).Max() <= 7)
-            //    return true;//Always brew when chance of blowing up is zero
+            if (WhiteTotal + data.tokensinbag.Select<Token,int>(t => t.Color==TokenColor.white ? t.Value : 0).Max() <= 7)
+                return true;//Always brew when chance of blowing up is zero
 
             Score = GetExpectedScore(data, out bool Brew);
             return Brew;
         }
         //Get Expected Score Assuming you Brew
      
-        private float GetExpectedScore( PlayerBrewData Data, out bool Brew)
+        private float GetExpectedScore( PlayerBrewData Data, out bool Brew, bool Caching = true)
         {
+
+
+
+            object Key = null;
             List<Token> Bag = Data.tokensinbag;
             List<Token> TokensOnBoard = Data.PlacedTokens;
             int CurrentTile = Data.CurrentTile;
@@ -62,33 +82,17 @@ namespace QuacksAI
                 return ScoreIfNotBrew;
             }
 
+            if (Caching)
+            {
+                Key = GetKey(Data);
+                if (Cache.TryGetValue(Key, out (float, bool) Result))
+                {
+                    Brew = Result.Item2;
+                    return Result.Item1;
+                }
+            }
 
-            //(int Money, int VP, bool Ruby) tile = Consts.Board[CurrentTile];
 
-
-            ////if blown up just return the current score
-            
-            //    float VPUtil = DynamicBrewingParameters.VPWeight * tile.VP;
-            //    float MoneyUtil = DynamicBrewingParameters.MoneyWeight * tile.Money;
-            //    float Rubies = 0f;
-            
-            //    if (TokensOnBoard.Count == 0)
-            //        Rubies = 0f;
-            //    else if (TokensOnBoard.Count == 1)
-            //        Rubies = TokensOnBoard[0].Color == TokenColor.green ? 1f : 0f;
-            //    else
-            //    {
-            //        Rubies += TokensOnBoard[TokensOnBoard.Count-1].Color == TokenColor.green ? 1f : 0f;
-            //        Rubies += TokensOnBoard[TokensOnBoard.Count - 2].Color == TokenColor.green ? 1f : 0f;
-            //    }
-            //    Rubies += tile.Ruby ? 1f : 0f;
-            //    float RubyUtil = Rubies * DynamicBrewingParameters.RubyWeight;
-            //if (TokensOnBoard.Where(t => t.Color == TokenColor.white).Select<Token, int>(t => t.Value).Sum() > 7)
-            //{
-            //    Brew = false;
-            //    return RubyUtil + Math.Max(MoneyUtil ,VPUtil);
-            //}
-            
 
 
             //Now Average expected score of each possible draw and return Max(that, sum(Utils))
@@ -113,7 +117,12 @@ namespace QuacksAI
             
             float ScoreIfBrew = total / (float)count;
             Brew = ScoreIfBrew > ScoreIfNotBrew;
-            return Math.Max(ScoreIfNotBrew, ScoreIfBrew);
+            float value = Math.Max(ScoreIfNotBrew, ScoreIfBrew);
+            if (Caching)
+            {
+                Cache.Add(Key, (value, Brew));
+            }
+            return value;
         }
 
         private Token BlueDrawn()
@@ -183,5 +192,12 @@ namespace QuacksAI
             Exploded = false;
             return RubyUtil + MoneyUtil + VPUtil;
         }
+    
+    
+        private object GetKey(PlayerBrewData PBD)
+        {
+            throw new NotImplementedException();
+        }
+    
     }
 }
