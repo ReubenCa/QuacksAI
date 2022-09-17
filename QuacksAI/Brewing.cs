@@ -120,7 +120,7 @@ namespace QuacksAI
             float value = Math.Max(ScoreIfNotBrew, ScoreIfBrew);
             if (Caching)
             {
-                Cache.Add(Key, (value, Brew));
+                Cache.Add(Key!, (value, Brew));
             }
             return value;
         }
@@ -194,9 +194,64 @@ namespace QuacksAI
         }
     
     
-        private object GetKey(PlayerBrewData PBD)
+        private (List<Token>, int ,int ,int, int, int, int) GetKey(PlayerBrewData PBD)
         {
-            throw new NotImplementedException();
+            //Ensures that any strategically identical situations will have the same key
+            //This Extra data is used instead of the list of tokens on the board as it allows for more matches
+            //and still should always result in the right decision
+            List<Token> Bag = PBD.tokensinbag;
+            Bag.Sort();
+            List<Token> Board = PBD.PlacedTokens;
+            int Tile = PBD.CurrentTile;
+            int RubyWeight = (int)(DynamicBrewingParameters.RubyWeight * 1024f);
+            int MoneyWeight = (int)(DynamicBrewingParameters.MoneyWeight * 1024f);
+            int VPWeight = (int)(DynamicBrewingParameters.VPWeight * 1024f);
+            int RedInBagCount = Bag.Where(t => t.Color == TokenColor.red).Count();
+            int OrangesInBagCount = Bag.Where(t => t.Color == TokenColor.orange).Count();
+            int OrangesOnBoard = Board.Where(t => t.Color == TokenColor.orange).Count();
+
+            //ORANGES
+            int AdjustedOrangesOnBoard;
+            if (RedInBagCount == 0 || (OrangesInBagCount + OrangesOnBoard) == 0)
+                AdjustedOrangesOnBoard = -1;
+            else if (OrangesOnBoard + OrangesInBagCount < 3)
+                AdjustedOrangesOnBoard = Math.Min(OrangesOnBoard, 1);//If you cant get the third orange makes no difference if you have one or two
+            else
+                AdjustedOrangesOnBoard = Math.Min(OrangesOnBoard, 3);
+
+            bool YellowInBag = Bag.Where(t => t.Color == TokenColor.yellow).Count() > 0;
+            int WhiteLast = YellowInBag ? Bag[Bag.Count - 1].Color == TokenColor.white ? Bag[Bag.Count - 1].Value : 0 : 0;
+            int GreensLastTwo = 0;
+            if(Bag.Count > 0)
+            {
+                GreensLastTwo += Bag[Bag.Count - 1].Color == TokenColor.green ? 1 : 0;
+                if(Bag.Count > 1)
+                    GreensLastTwo += Bag[Bag.Count - 2].Color == TokenColor.green ? 1 : 0;
+            }
+
+            return (Bag, RubyWeight, MoneyWeight, VPWeight, AdjustedOrangesOnBoard, WhiteLast, GreensLastTwo);
+        }
+    
+    }
+
+    public class CacheKeyCompararer : IEqualityComparer<(List<Token>, int, int, int, int, int, int)>
+    {
+        //bool IEqualityComparer<(List<Token>, int, int, int, int, int, int)>.Equals((List<Token>, int, int, int, int, int, int) x, (List<Token>, int, int, int, int, int, int) y)
+        //{
+        //    if (!x.Item1.SequenceEqual(y.Item1))
+        //        return false;
+        //    return x.Item1 == y.Item1 && x.Item2 == y.Item2 && x.Item3 == y.Item3 && x.Item4 == y.Item4 && x.Item5 == y.Item5 && x.Item6 == y.Item6 && x.Item7 == y.Item7;
+        //}
+
+        public bool Equals((List<Token>, int, int, int, int, int, int) x, (List<Token>, int, int, int, int, int, int) y)
+        {
+            if (!x.Item1.SequenceEqual(y.Item1))
+                return false;
+            return x.Item1 == y.Item1 && x.Item2 == y.Item2 && x.Item3 == y.Item3 && x.Item4 == y.Item4 && x.Item5 == y.Item5 && x.Item6 == y.Item6 && x.Item7 == y.Item7;
+        }
+        public int GetHashCode((List<Token>, int, int, int, int, int, int) x)
+        {
+            return x.GetHashCode();
         }
     
     }
