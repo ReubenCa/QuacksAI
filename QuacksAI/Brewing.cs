@@ -1,15 +1,34 @@
-﻿using System.Linq;
+﻿#define CACHE_STATS
+
+using System.Linq;
 
 namespace QuacksAI
 {
     public partial class AI : IBrew
         //Has an interace for brewing and buying to allow for easy UI that can also be made for players
     {
+#if CACHE_STATS
+        public const bool Cache_Stats = true;
+        public static long CacheAccesses = 0;
+        public static long CacheMisses = 0;
+        public static long CacheHits = 0;
+        public void ResetCacheStats()
+        { CacheAccesses = 0; CacheMisses = 0; CacheAccesses = 0; }
+#else
+        public const bool Cache_Stats = false;
+#endif
+
+
         //Static so AIs all share a Cache
-        private readonly static Dictionary<object, (float, bool)> _sharedcache = new Dictionary<object, (float, bool)>() ;
-        private readonly Dictionary<object, (float, bool)> _privatecache = new Dictionary<object, (float, bool)>();
+        private readonly static Dictionary<(List<Token>, int, int, int, int, int, int), (float, bool)> 
+            _sharedcache = new Dictionary<(List<Token>, int, int, int, int, int, int), (float, bool)>
+            (new CacheKeyCompararer()) ;
+
+        private readonly Dictionary<(List<Token>, int, int, int, int, int, int), (float, bool)> 
+            _privatecache = new Dictionary<(List<Token>, int, int, int, int, int, int),
+                (float, bool)>(new CacheKeyCompararer());
         
-        private Dictionary<object, (float, bool)> Cache
+        private Dictionary<(List<Token>, int, int, int, int, int, int), (float, bool)> Cache
         {
             get
             {
@@ -18,7 +37,7 @@ namespace QuacksAI
                 return _privatecache;
             }
         }
-
+        const bool Caching = Parameters.Caching;
 
 
         private AIDynamicBrewingParameters DynamicBrewingParameters;
@@ -66,12 +85,12 @@ namespace QuacksAI
         }
         //Get Expected Score Assuming you Brew
      
-        private float GetExpectedScore( PlayerBrewData Data, out bool Brew, bool Caching = true)
+        private float GetExpectedScore( PlayerBrewData Data, out bool Brew)
         {
 
 
 
-            object Key = null;
+            (List<Token>, int, int, int, int, int, int) Key =(null, 0,0,0,0,0,0);
             List<Token> Bag = Data.tokensinbag;
             List<Token> TokensOnBoard = Data.PlacedTokens;
             int CurrentTile = Data.CurrentTile;
@@ -84,12 +103,24 @@ namespace QuacksAI
 
             if (Caching)
             {
+#if CACHE_STATS
+                CacheAccesses++;
+#endif
                 Key = GetKey(Data);
                 if (Cache.TryGetValue(Key, out (float, bool) Result))
                 {
+#if CACHE_STATS
+                    CacheHits++;
+#endif
                     Brew = Result.Item2;
                     return Result.Item1;
                 }
+#if CACHE_STATS
+                else
+                {
+                    CacheMisses++;
+                }
+#endif
             }
 
 
@@ -161,8 +192,8 @@ namespace QuacksAI
             List<Token> TokensOnBoard = Data.PlacedTokens;
             int CurrentTile = Data.CurrentTile;
 
-
-            (int Money, int VP, bool Ruby) tile = Consts.Board[CurrentTile];
+            //If PAst the max Assume you just get the last tile
+            (int Money, int VP, bool Ruby) tile = Consts.Board[Math.Min(CurrentTile, Consts.Board.Length-1)];
 
 
             //if blown up just return the current score
@@ -247,7 +278,7 @@ namespace QuacksAI
         {
             if (!x.Item1.SequenceEqual(y.Item1))
                 return false;
-            return x.Item1 == y.Item1 && x.Item2 == y.Item2 && x.Item3 == y.Item3 && x.Item4 == y.Item4 && x.Item5 == y.Item5 && x.Item6 == y.Item6 && x.Item7 == y.Item7;
+            return x.Item2 == y.Item2 && x.Item3 == y.Item3 && x.Item4 == y.Item4 && x.Item5 == y.Item5 && x.Item6 == y.Item6 && x.Item7 == y.Item7;
         }
         public int GetHashCode((List<Token>, int, int, int, int, int, int) x)
         {

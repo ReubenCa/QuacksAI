@@ -13,10 +13,11 @@ namespace Tests
             int[] vals = new int[] { 1, 2, 4 };
             Type type = typeof(TokenColor);
             Array values = type.GetEnumValues();
-            int index = Consts.r.Next(values.Length);
+            
             TokenColor color;
             do
             {
+                int index = Consts.r.Next(values.Length);
                 color = (TokenColor)values.GetValue(index);
             } while (!AllowWhites && color == TokenColor.white);
             if (color == TokenColor.white)
@@ -30,7 +31,9 @@ namespace Tests
             Token[] types = new Token[NonWhiteTokenTypes];
             for (int i = 0; i < types.Length; i++)
                 types[i] = RandomTokenGenerator(false);
-            for(int i = 0; i < NonWhiteTokens; i++)
+            for (int i = 0; i < NonWhiteTokenTypes; i++)
+                bag.Add(types[i]);
+            for(int i = bag.Count; i < NonWhiteTokens; i++)
             {
                 bag.Add(types[Consts.r.Next(types.Length)]);
             }

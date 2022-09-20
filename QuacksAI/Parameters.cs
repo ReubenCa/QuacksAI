@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace QuacksAI
 {
-    internal static class Parameters
+    public static class Parameters
     {
         /// <summary>
         /// When true all AIs share a single cache of positions that is persistenet for the entire program
         /// </summary>
-        static public bool SharedCaching = true;
+        public const  bool SharedCaching = false;
+        public const bool Caching = true;
     }
 }
