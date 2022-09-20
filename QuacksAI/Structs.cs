@@ -54,7 +54,7 @@ namespace QuacksAI
         }
     }
 
-    public readonly struct Token : IEquatable<Token>
+    public readonly struct Token : IEquatable<Token>, IComparable<Token>
     {
         public readonly TokenColor Color;
         public readonly int Value;
@@ -73,6 +73,7 @@ namespace QuacksAI
             return obj is Token && Equals((Token)obj);
         }
 
+
         public static bool operator ==(Token left, Token right)
         {
             return left.Equals(right);
@@ -90,6 +91,12 @@ namespace QuacksAI
         public override string ToString()
         {
             return  Color.ToString() + " " + Value.ToString() ;
+        }
+        private static readonly int TokenColorCount = Enum.GetValues(typeof(TokenColor)).Length;
+
+        public int CompareTo(Token other)
+        {
+            return (Color + TokenColorCount * Value) - (other.Color + TokenColorCount* other.Value);
         }
     }
 

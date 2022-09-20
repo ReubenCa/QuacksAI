@@ -47,9 +47,9 @@ namespace QuacksAI
                         NewCurrentTile += 2;
                     break;
                 case TokenColor.yellow:
-                    if (Data.PlacedTokens[tokens.Count - 1].Color == TokenColor.white)
+                    if (Data.PlacedTokens.Count > 0 && Data.PlacedTokens[Data.PlacedTokens.Count - 1].Color == TokenColor.white)
                     {
-                        bag.Add(Data.PlacedTokens[tokens.Count - 1]);
+                        bag.Add(Data.PlacedTokens[Data.PlacedTokens.Count - 1]);
                         tokens.RemoveAt(tokens.Count - 1);
                     }
                     break;
