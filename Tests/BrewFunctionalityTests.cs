@@ -6,40 +6,6 @@ namespace Tests
     public class BrewTests
     {
 
-        //TODO: The Calcualte Score function should be combined with the almost identical code in the AI into one function
-        //private float CalculateScore(float RubyWeight, float MoneyWeight, float VPWeight, PlayerBrewData Data)
-        //{
-        //    List<Token> Bag = Data.tokensinbag;
-        //    List<Token> TokensOnBoard = Data.PlacedTokens;
-        //    int CurrentTile = Data.CurrentTile;
-
-
-        //    (int Money, int VP, bool Ruby) tile = Consts.Board[CurrentTile];
-
-
-        //    //if blown up just return the current score
-
-        //    float VPUtil = VPWeight * tile.VP;
-        //    float MoneyUtil = MoneyWeight * tile.Money;
-        //    float Rubies = 0f;
-
-        //    if (TokensOnBoard.Count == 0)
-        //        Rubies = 0f;
-        //    else if (TokensOnBoard.Count == 1)
-        //        Rubies = TokensOnBoard[0].Color == TokenColor.green ? 1f : 0f;
-        //    else
-        //    {
-        //        Rubies += TokensOnBoard[TokensOnBoard.Count - 1].Color == TokenColor.green ? 1f : 0f;
-        //        Rubies += TokensOnBoard[TokensOnBoard.Count - 2].Color == TokenColor.green ? 1f : 0f;
-        //    }
-        //    Rubies += tile.Ruby ? 1f : 0f;
-        //    float RubyUtil = Rubies * RubyWeight;
-        //    if (TokensOnBoard.Where(t => t.Color == TokenColor.white).Select<Token, int>(t => t.Value).Sum() > 7)
-        //    {
-        //        return RubyUtil + Math.Max(MoneyUtil, VPUtil);
-        //    }
-        //    return RubyUtil + MoneyUtil + VPUtil;
-        //}
 
         
  
@@ -153,6 +119,28 @@ namespace Tests
             float ScenarioWinRate = (float)AIScenarioWins / (float)(AIScenarioWins + RandomScenarioWins);
             Console.WriteLine("AIWins: {0} vs RandomWins: {1} (Draws: {2})\nWin Rate:\t{3}%\nScenarioWinRate:\t{4}%", AIwins, Randomwins, Draws, OverallWinRAte,ScenarioWinRate);
             Assert.IsTrue(OverallWinRAte > PassCriteria);
+        }
+
+
+        [TestMethod]
+        public void CachingTest()
+        {
+            AI.ResetCacheStats();
+            AI ai = new AI(new AIDynamicBrewingParameters(5, 2, 8), new AIStaticBrewingParameters());
+
+            List<Token> Bag = new List<Token>();
+            List<Token> BoardList = new List<Token>();
+            BoardList.Add(new Token(TokenColor.white, 7));
+            Bag.Add(new Token(TokenColor.white, 1));
+            Bag.Add(new Token(TokenColor.orange, 1));
+            Bag.Add(new Token(TokenColor.purple, 1));
+            PlayerBrewData Data = new PlayerBrewData(Bag, BoardList, 1);
+            ai.Brew(Data);
+            Console.WriteLine(AI.CacheHits + ", " + AI.CacheAccesses);
+            PlayerBrewData newData = Board.DrawChip(Data, new Token(TokenColor.orange, 1), out _, out _);
+            ai.Brew(newData);
+            Console.WriteLine(AI.CacheHits + ", " + AI.CacheAccesses);
+            return;
         }
     }
 }

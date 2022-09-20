@@ -19,9 +19,10 @@ namespace Tests
         [TestMethod]
         public void TimeGames()
         {
-            const int MaxTokenTypes = 6;
-            const int TrialsPerType = 100;
-            const int Tokens = 10;
+            const int MaxTokenTypes = 10;
+            const int TrialsPerType = 5;
+            const int Tokens = 15;
+            const bool loggames = false;
             StringBuilder sb = new StringBuilder(4000);
             sb.AppendLine("Caching: " + Parameters.Caching.ToString() + "\nShared Caching: " + Parameters.SharedCaching);
          
@@ -36,10 +37,10 @@ namespace Tests
                     AI ai = new AI(DBP, new AIStaticBrewingParameters());
                     PlayerBrewData PBD = new PlayerBrewData(startbag, new List<Token>(), 1);
                     timer.Start();
-                    TestUtilities.PlayTestRound(ai, PBD, out _,false);
+                    TestUtilities.PlayTestRound(ai, PBD, out _, loggames);
                     timer.Stop();
                 }
-                sb.AppendLine("With " + TokenTypes + " Token Types (not including whites)");
+                sb.AppendLine("\nWith " + TokenTypes + " Token Types (not including whites)");
                 sb.AppendLine("Average Time Taken To play an entire round over " + TrialsPerType + " Trials is " + (timer.ElapsedMilliseconds / (float)TrialsPerType).ToString() + "ms");
                 if(AI.Cache_Stats)
                     sb.AppendLine("Cache Accesses: " + AI.CacheAccesses + "\tCache Hits: " + AI.CacheHits + "\tCache Misses: " + AI.CacheMisses + "Hit Rate: " + ((100f)*(float)(AI.CacheHits)/(float)(AI.CacheAccesses)).ToString() + "%");

@@ -8,11 +8,11 @@ namespace QuacksAI
         //Has an interace for brewing and buying to allow for easy UI that can also be made for players
     {
 #if CACHE_STATS
-        public const bool Cache_Stats = true;
+        public const bool Cache_Stats = Parameters.Caching;
         public static long CacheAccesses = 0;
         public static long CacheMisses = 0;
         public static long CacheHits = 0;
-        public void ResetCacheStats()
+        public static void ResetCacheStats()
         { CacheAccesses = 0; CacheMisses = 0; CacheAccesses = 0; }
 #else
         public const bool Cache_Stats = false;
@@ -76,8 +76,8 @@ namespace QuacksAI
 
             int WhiteTotal = placed.Where(t => t.Color == TokenColor.white).Select<Token, int>(t => t.Value).Sum();
 
-            //TODO: update this so it factors in the chance of getting rubies - low priority as it is mainly hypothetical of stopping here for rubies
-            if (WhiteTotal + data.tokensinbag.Select<Token,int>(t => t.Color==TokenColor.white ? t.Value : 0).Max() <= 7)
+           
+            if (Parameters.AutoBrewWhenCantDie &&  WhiteTotal + data.tokensinbag.Select<Token,int>(t => t.Color==TokenColor.white ? t.Value : 0).Max() <= 7)
                 return true;//Always brew when chance of blowing up is zero
 
             Score = GetExpectedScore(data, out bool Brew);
@@ -130,7 +130,8 @@ namespace QuacksAI
             float total = 0f;
             int count = Bag.Count;
             //Garuntees token of the same type will be next to each other
-            Queue<Token> BagList = new Queue<Token>(Bag.OrderBy<Token, (int, int)>(t => ( (int)t.Color, t.Value)).ToList());
+            Bag.Sort();
+            Queue<Token> BagList = new Queue<Token>(Bag);
             while(BagList.Count>0)
             {
                 Token t = BagList.Dequeue();
@@ -282,7 +283,11 @@ namespace QuacksAI
         }
         public int GetHashCode((List<Token>, int, int, int, int, int, int) x)
         {
-            return x.GetHashCode();
+            (int, int, int, int, int, int) y = (x.Item2, x.Item3, x.Item4, x.Item5, x.Item6, x.Item7);
+            int val = 0;
+            x.Item1.ForEach(t => val ^= t.GetHashCode());
+            return y.GetHashCode() ^ val;
+                
         }
     
     }

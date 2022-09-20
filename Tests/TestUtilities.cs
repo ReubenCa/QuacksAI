@@ -71,19 +71,32 @@ namespace Tests
         }
         public static PlayerBrewData PlayTestRound(IBrew ai,PlayerBrewData Data, out bool Exploded, bool loggame)
         {
-
-
-
+            long CurrentCacheHits = 0;
+            long CurrentCacheAccesses = 0;
+            int Round = 0;
+            if (loggame && AI.Cache_Stats)
+            {
+                CurrentCacheAccesses = AI.CacheAccesses;
+                CurrentCacheHits = AI.CacheHits;
+            }
+           
 
             Exploded = false;
 
             while (!Exploded && ai.Brew(Data))
             {
+                Round++;
                 Data = Board.DrawChip(Data, out _, out Exploded, out Token Drawn);
                 if (loggame)
                 {
                     Console.WriteLine(Drawn);
                 }
+                if(loggame && AI.Cache_Stats)
+                {
+                    Console.WriteLine("Round {0}:\nCache Accesses: {1}\tCache Hits: {2}", Round, AI.CacheAccesses - CurrentCacheAccesses, AI.CacheHits - CurrentCacheHits);
+                }
+                
+                
             }
             if (loggame)
             {

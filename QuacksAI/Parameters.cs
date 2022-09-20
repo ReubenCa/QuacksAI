@@ -13,5 +13,8 @@ namespace QuacksAI
         /// </summary>
         public const  bool SharedCaching = false;
         public const bool Caching = true;
+        public const bool AutoBrewWhenCantDie = false;
+
+        //TODO: add a ToString method so that parameters can be included in logs
     }
 }
