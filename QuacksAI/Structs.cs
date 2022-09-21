@@ -38,6 +38,9 @@ namespace QuacksAI
 
     public readonly struct PlayerBrewData
     {
+
+        //Should Probably contain whether last tile was a blue
+
         public readonly List<Token> tokensinbag; //HAS TO BE A LIST TO ALLOW FOR DUPLICATES
         public readonly List<Token> PlacedTokens;
         ///// <summary>

@@ -17,15 +17,15 @@ namespace QuacksAI
         /// <param name="Data"></param>
         /// <param name="BlueDecisionNeeded"></param>
         /// <returns></returns>
-        public static PlayerBrewData DrawChip(PlayerBrewData Data, out bool BlueDecisionNeeded, out bool Exploded, out Token TokenDrawn)
+        public static PlayerBrewData DrawChip(PlayerBrewData Data, out int BlueDecisionNeeded, out bool Exploded, out Token TokenDrawn)
         {
             TokenDrawn = Data.tokensinbag.ElementAt(Consts.r.Next(Data.tokensinbag.Count));
             return DrawChip(Data, TokenDrawn, out BlueDecisionNeeded, out Exploded);
         }
-        public static PlayerBrewData DrawChip(PlayerBrewData Data, Token t, out bool BlueDecisionNeeded, out bool Exploded)
+        public static PlayerBrewData DrawChip(PlayerBrewData Data, Token t, out int BlueDecisionNeeded, out bool Exploded)
         {
             Exploded = false;
-            BlueDecisionNeeded = false;
+            BlueDecisionNeeded = -1;
             //PlayerBrewData PBD = new PlayerBrewData();
 
             List<Token> bag = new List<Token>(Data.tokensinbag);
@@ -54,7 +54,7 @@ namespace QuacksAI
                     }
                     break;
                 case TokenColor.blue:
-                    BlueDecisionNeeded = true;
+                    BlueDecisionNeeded = t.Value;
                     break;
                 case TokenColor.white:
                     Exploded = tokens.Select<Token, int>(t => t.Color == TokenColor.white ? t.Value : 0).Sum() > 7;
