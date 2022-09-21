@@ -85,9 +85,9 @@ namespace QuacksAI
         }
         //Get Expected Score Assuming you Brew
      
-        private float GetExpectedScore( PlayerBrewData Data, out bool Brew)
+        private float GetExpectedScore( PlayerBrewData Data,  out bool Brew)
         {
-
+           
 
 
             (List<Token>, int, int, int, int, int, int) Key =(null, 0,0,0,0,0,0);
@@ -144,6 +144,7 @@ namespace QuacksAI
                 }
 
                 PlayerBrewData IfDrawn = Board.DrawChip(Data, t, out bool BlueDecision, out bool Exploded);
+                
                 total += GetExpectedScore(IfDrawn, out bool brew)*Count;
             }
             
@@ -156,6 +157,41 @@ namespace QuacksAI
             }
             return value;
         }
+
+        /// <summary>
+        /// Gets the expected score if the previous tile played was blue and therefore this turn gets to choose form multiple options
+        /// </summary>
+        /// <param name="Data"></param>
+        /// <param name="BlueCount"></param>
+        /// <returns></returns>
+        private float GetExpectedScoreFromBlue(PlayerBrewData Data, int BlueCount)
+        {
+            float ScoreIfNone = GetExpectedScore(Data, out _);
+            float[] Values = new float[Data.tokensinbag.Count];
+            for (int i = 0; i < Data.tokensinbag.Count; i++)
+            {
+                PlayerBrewData NewData = Board.DrawChip(Data, Data.tokensinbag[i], out int AnotherBlue, out _);
+                if (AnotherBlue>0)
+                    Values[i] = GetExpectedScoreFromBlue(NewData, AnotherBlue);
+                else
+                    Values[i] = GetExpectedScore(NewData, out _);
+            }
+            Array.Sort(Values);
+            float Total = 0f;
+            for(int i = BlueCount-1; i < Values.Length; i++)
+            {
+                float ProbThatThisWouldBeHighest = 1f;
+                for(int j = 0; j< BlueCount -1 && ProbThatThisWouldBeHighest > 0f; j++)
+                {
+                    ProbThatThisWouldBeHighest *= Math.Max((float)(i-j) / ((float)Values.Length-1-j), 0f);
+                }
+                Total += ProbThatThisWouldBeHighest * Values[i];
+
+            }
+            float Average = Total * ( (float)BlueCount/(float)Values.Length);
+            return Math.Max(Average, ScoreIfNone);
+        }
+
 
         private Token BlueDrawn()
         {
@@ -177,9 +213,21 @@ namespace QuacksAI
         /// <param name="data"></param>
         /// <param name="TokensToChoose"></param>
         /// <returns></returns>
-        public Token DecideOnBlue(PlayerBrewData data, List<Token> TokensToChoose)
+        public Token? DecideOnBlue(PlayerBrewData data, List<Token> TokensToChoose)
         {
-            throw new NotImplementedException();
+            float BestScore = GetExpectedScore(data, out _);
+            Token? BestToken = null;
+            foreach(Token t in TokensToChoose)
+            {
+                PlayerBrewData newData = Board.DrawChip(data, t, out _, out _);
+                float NewScore = GetExpectedScore(newData, out _);
+                if(NewScore > BestScore)
+                {
+                    BestScore = NewScore;
+                    BestToken = t;
+                }
+            }
+            return BestToken;
         }
 
         public static float ScoreIfStopOrExplode(AIDynamicBrewingParameters AIP, PlayerBrewData Data, out bool Exploded)

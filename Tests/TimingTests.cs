@@ -19,8 +19,8 @@ namespace Tests
         [TestMethod]
         public void TimeGames()
         {
-            const int MaxTokenTypes = 10;
-            const int TrialsPerType = 5;
+            const int MaxTokenTypes = 15;
+            const int TrialsPerType = 500;
             const int Tokens = 15;
             const bool loggames = false;
             StringBuilder sb = new StringBuilder(4000);
@@ -42,8 +42,11 @@ namespace Tests
                 }
                 sb.AppendLine("\nWith " + TokenTypes + " Token Types (not including whites)");
                 sb.AppendLine("Average Time Taken To play an entire round over " + TrialsPerType + " Trials is " + (timer.ElapsedMilliseconds / (float)TrialsPerType).ToString() + "ms");
-                if(AI.Cache_Stats)
-                    sb.AppendLine("Cache Accesses: " + AI.CacheAccesses + "\tCache Hits: " + AI.CacheHits + "\tCache Misses: " + AI.CacheMisses + "Hit Rate: " + ((100f)*(float)(AI.CacheHits)/(float)(AI.CacheAccesses)).ToString() + "%");
+                if (AI.Cache_Stats)
+                {
+                    sb.AppendLine("Cache Accesses: " + AI.CacheAccesses + "\tCache Hits: " + AI.CacheHits + "\tCache Misses: " + AI.CacheMisses + "Hit Rate: " + ((100f) * (float)(AI.CacheHits) / (float)(AI.CacheAccesses)).ToString() + "%");
+                    AI.ResetCacheStats();
+                }
             }
            
            sb.AppendLine("\n--------------\n");
