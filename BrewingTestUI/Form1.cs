@@ -50,7 +50,7 @@ namespace BrewingTestUI
             AIDynamicBrewingParameters d = new AIDynamicBrewingParameters(VPWeight, MoneyWeight, RubyWeight);
             AI ai = new AI(d, new AIStaticBrewingParameters());
 
-            PlayerBrewData PBD = new PlayerBrewData(Bag, Board, (int)StartingTileInput.Value);
+            PlayerBrewData PBD = new PlayerBrewData(Bag, Board, (int)StartingTileInput.Value, -1);
 
             
             OutputLabel.Text = ai.Brew(PBD, out float Score) ? "Should Brew" : "Shouldn't Brew"  ;

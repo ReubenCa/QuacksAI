@@ -134,10 +134,10 @@ namespace Tests
             Bag.Add(new Token(TokenColor.white, 1));
             Bag.Add(new Token(TokenColor.orange, 1));
             Bag.Add(new Token(TokenColor.purple, 1));
-            PlayerBrewData Data = new PlayerBrewData(Bag, BoardList, 1);
+            PlayerBrewData Data = new PlayerBrewData(Bag, BoardList, 1,0);
             ai.Brew(Data);
             Console.WriteLine(AI.CacheHits + ", " + AI.CacheAccesses);
-            PlayerBrewData newData = Board.DrawChip(Data, new Token(TokenColor.orange, 1), out _, out _);
+            PlayerBrewData newData = Board.DrawChip(Data, new Token(TokenColor.orange, 1), out _);
             ai.Brew(newData);
             Console.WriteLine(AI.CacheHits + ", " + AI.CacheAccesses);
             return;

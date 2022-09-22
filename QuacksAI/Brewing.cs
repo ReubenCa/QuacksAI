@@ -49,6 +49,11 @@ namespace QuacksAI
             this.StaticBrewingParameters = staticBrewingParameters;
         }
 
+        //public bool Brew(PlayerBrewData Data, out float Score)
+        //{
+        //    return Brew(Data, out Score, out Token? _);
+        //}
+
         public bool Brew(PlayerBrewData data)
         {
             return Brew(data, out float _);
@@ -60,9 +65,14 @@ namespace QuacksAI
         /// <param name="data"></param>
         /// <returns></returns>
         /// 
-        public bool Brew(PlayerBrewData data,  out float Score)
+        public bool Brew(PlayerBrewData data,  out float Score/*, List<Token>? tokensToChooseFromIfBlue = null, out Token? tokenChosenIfBlue*/)
         {
-            
+            //if(data.BlueLast > 0)
+            //{
+            //    tokenChosenIfBlue = DecideOnBlue(data, tokensToChooseFromIfBlue!);
+            //    return tokenChosenIfBlue != null;
+            //}
+            //tokenChosenIfBlue = null;
             Score = 0f;
             List<Token> Bag = data.tokensinbag;
             List<Token> placed = data.PlacedTokens;
@@ -87,7 +97,8 @@ namespace QuacksAI
      
         private float GetExpectedScore( PlayerBrewData Data,  out bool Brew)
         {
-           
+            if (Data.BlueLast > 0)
+                return GetExpectedScoreFromBlue(Data, out Brew);
 
 
             (List<Token>, int, int, int, int, int, int) Key =(null, 0,0,0,0,0,0);
@@ -143,7 +154,7 @@ namespace QuacksAI
                     BagList.Dequeue();
                 }
 
-                PlayerBrewData IfDrawn = Board.DrawChip(Data, t, out bool BlueDecision, out bool Exploded);
+                PlayerBrewData IfDrawn = Board.DrawChip(Data, t, out bool Exploded);
                 
                 total += GetExpectedScore(IfDrawn, out bool brew)*Count;
             }
@@ -164,16 +175,16 @@ namespace QuacksAI
         /// <param name="Data"></param>
         /// <param name="BlueCount"></param>
         /// <returns></returns>
-        private float GetExpectedScoreFromBlue(PlayerBrewData Data, int BlueCount)
+        private float GetExpectedScoreFromBlue(PlayerBrewData Data, out bool Brew)
         {
-            float ScoreIfNone = GetExpectedScore(Data, out _);
+
+            int BlueCount = Data.BlueLast;
+            PlayerBrewData DataIfNone = new PlayerBrewData(Data.tokensinbag, Data.PlacedTokens, Data.CurrentTile, -1);
+            float ScoreIfNone = GetExpectedScore(DataIfNone, out _);
             float[] Values = new float[Data.tokensinbag.Count];
             for (int i = 0; i < Data.tokensinbag.Count; i++)
             {
-                PlayerBrewData NewData = Board.DrawChip(Data, Data.tokensinbag[i], out int AnotherBlue, out _);
-                if (AnotherBlue>0)
-                    Values[i] = GetExpectedScoreFromBlue(NewData, AnotherBlue);
-                else
+                PlayerBrewData NewData = Board.DrawChip(Data, Data.tokensinbag[i], out _);
                     Values[i] = GetExpectedScore(NewData, out _);
             }
             Array.Sort(Values);
@@ -189,14 +200,15 @@ namespace QuacksAI
 
             }
             float Average = Total * ( (float)BlueCount/(float)Values.Length);
+            Brew = Average > ScoreIfNone;
             return Math.Max(Average, ScoreIfNone);
         }
 
 
-        private Token BlueDrawn()
-        {
-            throw new NotImplementedException();
-        }
+        //private Token BlueDrawn()
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         /// <summary>
         /// Decides if the AI should Flask
@@ -219,7 +231,7 @@ namespace QuacksAI
             Token? BestToken = null;
             foreach(Token t in TokensToChoose)
             {
-                PlayerBrewData newData = Board.DrawChip(data, t, out _, out _);
+                PlayerBrewData newData = Board.DrawChip(data, t,  out _);
                 float NewScore = GetExpectedScore(newData, out _);
                 if(NewScore > BestScore)
                 {

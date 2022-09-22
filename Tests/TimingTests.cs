@@ -19,8 +19,8 @@ namespace Tests
         [TestMethod]
         public void TimeGames()
         {
-            const int MaxTokenTypes = 15;
-            const int TrialsPerType = 500;
+            const int MaxTokenTypes = 5;
+            const int TrialsPerType = 5;
             const int Tokens = 15;
             const bool loggames = false;
             StringBuilder sb = new StringBuilder(4000);
@@ -35,7 +35,7 @@ namespace Tests
                     List<Token> startbag = TestUtilities.CreateRandomStaringBag(TokenTypes, Tokens);
                     AIDynamicBrewingParameters DBP = new AIDynamicBrewingParameters((float)Consts.r.NextDouble()*5, (float)Consts.r.NextDouble(),(float)Consts.r.NextDouble()*3);
                     AI ai = new AI(DBP, new AIStaticBrewingParameters());
-                    PlayerBrewData PBD = new PlayerBrewData(startbag, new List<Token>(), 1);
+                    PlayerBrewData PBD = new PlayerBrewData(startbag, new List<Token>(), 1, 0);
                     timer.Start();
                     TestUtilities.PlayTestRound(ai, PBD, out _, loggames);
                     timer.Stop();

@@ -27,7 +27,7 @@ namespace Tests
             return Consts.r.NextDouble() < p;
         }
 
-        public Token DecideOnBlue(PlayerBrewData data, List<Token> TokensToChoose)
+        public Token? DecideOnBlue(PlayerBrewData data, List<Token> TokensToChoose)
         {
             throw new NotImplementedException();
         }

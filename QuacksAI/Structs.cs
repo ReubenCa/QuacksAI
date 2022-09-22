@@ -39,7 +39,7 @@ namespace QuacksAI
     public readonly struct PlayerBrewData
     {
 
-        //Should Probably contain whether last tile was a blue
+        public readonly int BlueLast;
 
         public readonly List<Token> tokensinbag; //HAS TO BE A LIST TO ALLOW FOR DUPLICATES
         public readonly List<Token> PlacedTokens;
@@ -49,11 +49,12 @@ namespace QuacksAI
         //public int StartingTile; Current tile should just be set to this at the start
         public readonly int CurrentTile;
         
-        public PlayerBrewData(List<Token> tokensinbag, List<Token> PlacedTokens, int CurrentTile)
+        public PlayerBrewData(List<Token> tokensinbag, List<Token> PlacedTokens, int CurrentTile, int BlueLast)
         {
             this.tokensinbag = tokensinbag;
             this.PlacedTokens = PlacedTokens;
             this.CurrentTile = CurrentTile;
+            this.BlueLast = BlueLast;
         }
     }
 

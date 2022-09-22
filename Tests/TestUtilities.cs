@@ -66,7 +66,7 @@ namespace Tests
             }
             TokensInBag = null;
             List<Token> tokensonboard = new List<Token>(35);
-            PlayerBrewData Data = new PlayerBrewData(tokens, tokensonboard, 1);
+            PlayerBrewData Data = new PlayerBrewData(tokens, tokensonboard, 1, 0);
             return PlayTestRound(ai, Data, out Exploded, loggame);
         }
         public static PlayerBrewData PlayTestRound(IBrew ai,PlayerBrewData Data, out bool Exploded, bool loggame)
@@ -86,7 +86,7 @@ namespace Tests
             while (!Exploded && ai.Brew(Data))
             {
                 Round++;
-                Data = Board.DrawChip(Data, out _, out Exploded, out Token Drawn);
+                Data = Board.DrawChip(Data,  out Exploded, out Token Drawn);
                 if (loggame)
                 {
                     Console.WriteLine(Drawn);
