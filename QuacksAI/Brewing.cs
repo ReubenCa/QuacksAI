@@ -1,5 +1,5 @@
 ﻿#define CACHE_STATS
-
+#define ENFORCE_BLUE_RULE
 using System.Linq;
 
 namespace QuacksAI
@@ -20,15 +20,15 @@ namespace QuacksAI
 
 
         //Static so AIs all share a Cache
-        private readonly static Dictionary<(List<Token>, int, int, int, int, int, int), (float, bool)> 
-            _sharedcache = new Dictionary<(List<Token>, int, int, int, int, int, int), (float, bool)>
+        private readonly static Dictionary<(List<Token>, int, int, int, int, int, int, int), (float, bool?)> 
+            _sharedcache = new Dictionary<(List<Token>, int, int, int, int, int, int, int), (float, bool?)>
             (new CacheKeyCompararer()) ;
 
-        private readonly Dictionary<(List<Token>, int, int, int, int, int, int), (float, bool)> 
-            _privatecache = new Dictionary<(List<Token>, int, int, int, int, int, int),
-                (float, bool)>(new CacheKeyCompararer());
+        private readonly Dictionary<(List<Token>, int, int, int, int, int, int, int), (float, bool?)> 
+            _privatecache = new Dictionary<(List<Token>, int, int, int, int, int, int, int),
+                (float, bool?)>(new CacheKeyCompararer());
         
-        private Dictionary<(List<Token>, int, int, int, int, int, int), (float, bool)> Cache
+        private Dictionary<(List<Token>, int, int, int, int, int, int, int), (float, bool?)> Cache
         {
             get
             {
@@ -65,14 +65,13 @@ namespace QuacksAI
         /// <param name="data"></param>
         /// <returns></returns>
         /// 
-        public bool Brew(PlayerBrewData data,  out float Score/*, List<Token>? tokensToChooseFromIfBlue = null, out Token? tokenChosenIfBlue*/)
+        public bool Brew(PlayerBrewData data,  out float Score)
         {
-            //if(data.BlueLast > 0)
-            //{
-            //    tokenChosenIfBlue = DecideOnBlue(data, tokensToChooseFromIfBlue!);
-            //    return tokenChosenIfBlue != null;
-            //}
-            //tokenChosenIfBlue = null;
+
+#if ENFORCE_BLUE_RULE
+            if (data.BlueLast > 0)
+                throw new Exception("Enforce Blue Rule is Enabled and the normal Brew Function was used when a blue was previously played");
+#endif
             Score = 0f;
             List<Token> Bag = data.tokensinbag;
             List<Token> placed = data.PlacedTokens;
@@ -90,25 +89,24 @@ namespace QuacksAI
             if (Parameters.AutoBrewWhenCantDie &&  WhiteTotal + data.tokensinbag.Select<Token,int>(t => t.Color==TokenColor.white ? t.Value : 0).Max() <= 7)
                 return true;//Always brew when chance of blowing up is zero
 
-            Score = GetExpectedScore(data, out bool Brew);
-            return Brew;
+            Score = GetExpectedScore(data, out bool? Brew);
+            return (bool)Brew!;
         }
         //Get Expected Score Assuming you Brew
      
-        private float GetExpectedScore( PlayerBrewData Data,  out bool Brew)
+        private float GetExpectedScore( PlayerBrewData Data,  out bool? Brew)//Brew is null when instead is using Blue Decision to Brew
         {
-            if (Data.BlueLast > 0)
-                return GetExpectedScoreFromBlue(Data, out Brew);
+            
 
 
-            (List<Token>, int, int, int, int, int, int) Key =(null, 0,0,0,0,0,0);
+            (List<Token>, int, int, int, int, int, int, int) Key =(null, 0,0,0,0,0,0,0);
             List<Token> Bag = Data.tokensinbag;
             List<Token> TokensOnBoard = Data.PlacedTokens;
             int CurrentTile = Data.CurrentTile;
             float ScoreIfNotBrew = ScoreIfStopOrExplode(DynamicBrewingParameters, Data, out bool explode);
             if (explode)
             {
-                Brew = false; 
+                Brew = false;
                 return ScoreIfNotBrew;
             }
 
@@ -118,7 +116,7 @@ namespace QuacksAI
                 CacheAccesses++;
 #endif
                 Key = GetKey(Data);
-                if (Cache.TryGetValue(Key, out (float, bool) Result))
+                if (Cache.TryGetValue(Key, out (float, bool?) Result))
                 {
 #if CACHE_STATS
                     CacheHits++;
@@ -134,7 +132,13 @@ namespace QuacksAI
 #endif
             }
 
+            if (Data.BlueLast > 0)
+            {
+                Brew = null;
+                return GetExpectedScoreFromBlue(Data);
 
+            }
+                
 
 
             //Now Average expected score of each possible draw and return Max(that, sum(Utils))
@@ -156,7 +160,7 @@ namespace QuacksAI
 
                 PlayerBrewData IfDrawn = Board.DrawChip(Data, t, out bool Exploded);
                 
-                total += GetExpectedScore(IfDrawn, out bool brew)*Count;
+                total += GetExpectedScore(IfDrawn, out _)*Count;
             }
             
             float ScoreIfBrew = total / (float)count;
@@ -175,7 +179,7 @@ namespace QuacksAI
         /// <param name="Data"></param>
         /// <param name="BlueCount"></param>
         /// <returns></returns>
-        private float GetExpectedScoreFromBlue(PlayerBrewData Data, out bool Brew)
+        private float GetExpectedScoreFromBlue(PlayerBrewData Data)
         {
 
             int BlueCount = Data.BlueLast;
@@ -200,15 +204,11 @@ namespace QuacksAI
 
             }
             float Average = Total * ( (float)BlueCount/(float)Values.Length);
-            Brew = Average > ScoreIfNone;
+            throw new NotImplementedException("Need to Bring the Maths Fix from the Stash tpo here");
             return Math.Max(Average, ScoreIfNone);
         }
 
 
-        //private Token BlueDrawn()
-        //{
-        //    throw new NotImplementedException();
-        //}
 
         /// <summary>
         /// Decides if the AI should Flask
@@ -280,13 +280,13 @@ namespace QuacksAI
                 return RubyUtil + Math.Max(MoneyUtil, VPUtil);
             }
             if (Bag.Count == 0)
-                throw new Exception("Bag Empty, likely caused by brewing with less than seven whites in the bag");
+                throw new Exception("Bag Empty, likely caused by brewing with less than eight whites in the bag");
             Exploded = false;
             return RubyUtil + MoneyUtil + VPUtil;
         }
     
     
-        private (List<Token>, int ,int ,int, int, int, int) GetKey(PlayerBrewData PBD)
+        private (List<Token>, int ,int ,int, int, int, int, int) GetKey(PlayerBrewData PBD)
         {
             //Ensures that any strategically identical situations will have the same key
             //This Extra data is used instead of the list of tokens on the board as it allows for more matches
@@ -321,12 +321,12 @@ namespace QuacksAI
                     GreensLastTwo += Bag[Bag.Count - 2].Color == TokenColor.green ? 1 : 0;
             }
 
-            return (Bag, RubyWeight, MoneyWeight, VPWeight, AdjustedOrangesOnBoard, WhiteLast, GreensLastTwo);
+            return (Bag, RubyWeight, MoneyWeight, VPWeight, AdjustedOrangesOnBoard, WhiteLast, GreensLastTwo, PBD.BlueLast);
         }
     
     }
 
-    public class CacheKeyCompararer : IEqualityComparer<(List<Token>, int, int, int, int, int, int)>
+    public class CacheKeyCompararer : IEqualityComparer<(List<Token>, int, int, int, int, int, int, int)>
     {
         //bool IEqualityComparer<(List<Token>, int, int, int, int, int, int)>.Equals((List<Token>, int, int, int, int, int, int) x, (List<Token>, int, int, int, int, int, int) y)
         //{
@@ -335,15 +335,15 @@ namespace QuacksAI
         //    return x.Item1 == y.Item1 && x.Item2 == y.Item2 && x.Item3 == y.Item3 && x.Item4 == y.Item4 && x.Item5 == y.Item5 && x.Item6 == y.Item6 && x.Item7 == y.Item7;
         //}
 
-        public bool Equals((List<Token>, int, int, int, int, int, int) x, (List<Token>, int, int, int, int, int, int) y)
+        public bool Equals((List<Token>, int, int, int, int, int, int, int) x, (List<Token>, int, int, int, int, int, int, int) y)
         {
             if (!x.Item1.SequenceEqual(y.Item1))
                 return false;
-            return x.Item2 == y.Item2 && x.Item3 == y.Item3 && x.Item4 == y.Item4 && x.Item5 == y.Item5 && x.Item6 == y.Item6 && x.Item7 == y.Item7;
+            return x.Item2 == y.Item2 && x.Item3 == y.Item3 && x.Item4 == y.Item4 && x.Item5 == y.Item5 && x.Item6 == y.Item6 && x.Item7 == y.Item7 && x.Item8 == y.Item8;
         }
-        public int GetHashCode((List<Token>, int, int, int, int, int, int) x)
+        public int GetHashCode((List<Token>, int, int, int, int, int, int, int) x)
         {
-            (int, int, int, int, int, int) y = (x.Item2, x.Item3, x.Item4, x.Item5, x.Item6, x.Item7);
+            (int, int, int, int, int, int, int) y = (x.Item2, x.Item3, x.Item4, x.Item5, x.Item6, x.Item7, x.Item8);
             int val = 0;
             x.Item1.ForEach(t => val ^= t.GetHashCode());
             return y.GetHashCode() ^ val;
