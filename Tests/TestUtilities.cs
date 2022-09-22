@@ -83,19 +83,30 @@ namespace Tests
 
             Exploded = false;
 
-            while (!Exploded && ai.Brew(Data))
+            while (!Exploded && (Data.BlueLast > 0 || ai.Brew(Data)))
             {
                 Round++;
-                Data = Board.DrawChip(Data,  out Exploded, out Token Drawn);
+                if( Data.BlueLast <= 0)
+                    Data = Board.DrawToken(Data,  out Exploded, out _);
+                else
+                {
+                    //throw new NotImplementedException();
+                    //Pick n random tokens and then Board.DrawChip the AIs decision out of those tokens.
+                    List<Token> Choices = Data.tokensinbag.OrderBy(x => Consts.r.Next()).Take(Data.BlueLast).ToList();
+                    Token? Choice = ai.DecideOnBlue(Data, Choices);
+                    if(Choice!= null)
+                    {
+                        Data = Board.DrawToken(Data, (Token)Choice, out Exploded);
+                    }
+                }
                 if (loggame)
                 {
-                    Console.WriteLine(Drawn);
+                    Console.WriteLine("Drawn");
                 }
                 if(loggame && AI.Cache_Stats)
                 {
                     Console.WriteLine("Round {0}:\nCache Accesses: {1}\tCache Hits: {2}", Round, AI.CacheAccesses - CurrentCacheAccesses, AI.CacheHits - CurrentCacheHits);
                 }
-                
                 
             }
             if (loggame)

@@ -20,7 +20,7 @@ namespace Tests
         public void TimeGames()
         {
             const int MaxTokenTypes = 5;
-            const int TrialsPerType = 5;
+            const int TrialsPerType = 2;
             const int Tokens = 15;
             const bool loggames = false;
             StringBuilder sb = new StringBuilder(4000);

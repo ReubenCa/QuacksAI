@@ -158,7 +158,7 @@ namespace QuacksAI
                     BagList.Dequeue();
                 }
 
-                PlayerBrewData IfDrawn = Board.DrawChip(Data, t, out bool Exploded);
+                PlayerBrewData IfDrawn = Board.DrawToken(Data, t, out bool Exploded);
                 
                 total += GetExpectedScore(IfDrawn, out _)*Count;
             }
@@ -182,30 +182,34 @@ namespace QuacksAI
         private float GetExpectedScoreFromBlue(PlayerBrewData Data)
         {
 
+
             int BlueCount = Data.BlueLast;
             PlayerBrewData DataIfNone = new PlayerBrewData(Data.tokensinbag, Data.PlacedTokens, Data.CurrentTile, -1);
             float ScoreIfNone = GetExpectedScore(DataIfNone, out _);
             float[] Values = new float[Data.tokensinbag.Count];
             for (int i = 0; i < Data.tokensinbag.Count; i++)
             {
-                PlayerBrewData NewData = Board.DrawChip(Data, Data.tokensinbag[i], out _);
-                    Values[i] = GetExpectedScore(NewData, out _);
+                PlayerBrewData NewData = Board.DrawToken(Data, Data.tokensinbag[i], out _);
+                Values[i] = GetExpectedScore(NewData, out _);
             }
             Array.Sort(Values);
-            float Total = 0f;
-            for(int i = BlueCount-1; i < Values.Length; i++)
+            float AverageScoreFromAllOutcomes = 0f;
+            for (int i = BlueCount - 1; i < Values.Length; i++)
             {
+
                 float ProbThatThisWouldBeHighest = 1f;
-                for(int j = 0; j< BlueCount -1 && ProbThatThisWouldBeHighest > 0f; j++)
+                for (int j = 0; j < BlueCount - 1 && ProbThatThisWouldBeHighest > 0f; j++)
                 {
-                    ProbThatThisWouldBeHighest *= Math.Max((float)(i-j) / ((float)Values.Length-1-j), 0f);
+                    ProbThatThisWouldBeHighest *= Math.Max((float)(i - j) / ((float)Values.Length - 1 - j), 0f);
                 }
-                Total += ProbThatThisWouldBeHighest * Values[i];
+                AverageScoreFromAllOutcomes += ProbThatThisWouldBeHighest * Math.Max(Values[i], ScoreIfNone);/* * ((float)BlueCount / (float)Values.Length)*/;
+                //Score += Probabilty this is your best option GIVEN THAT IT IS AN OPTION * value of option * Odds that this is an option (last term moved outside loop as it is a constant)
 
             }
-            float Average = Total * ( (float)BlueCount/(float)Values.Length);
-            throw new NotImplementedException("Need to Bring the Maths Fix from the Stash tpo here");
-            return Math.Max(Average, ScoreIfNone);
+            AverageScoreFromAllOutcomes *= ((float)BlueCount / (float)Values.Length);//Odds that any given tile is the tile of your choice
+
+            return AverageScoreFromAllOutcomes;
+
         }
 
 
@@ -227,11 +231,12 @@ namespace QuacksAI
         /// <returns></returns>
         public Token? DecideOnBlue(PlayerBrewData data, List<Token> TokensToChoose)
         {
+            
             float BestScore = GetExpectedScore(data, out _);
             Token? BestToken = null;
             foreach(Token t in TokensToChoose)
             {
-                PlayerBrewData newData = Board.DrawChip(data, t,  out _);
+                PlayerBrewData newData = Board.DrawToken(data, t,  out _);
                 float NewScore = GetExpectedScore(newData, out _);
                 if(NewScore > BestScore)
                 {

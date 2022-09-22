@@ -137,7 +137,7 @@ namespace Tests
             PlayerBrewData Data = new PlayerBrewData(Bag, BoardList, 1,0);
             ai.Brew(Data);
             Console.WriteLine(AI.CacheHits + ", " + AI.CacheAccesses);
-            PlayerBrewData newData = Board.DrawChip(Data, new Token(TokenColor.orange, 1), out _);
+            PlayerBrewData newData = Board.DrawToken(Data, new Token(TokenColor.orange, 1), out _);
             ai.Brew(newData);
             Console.WriteLine(AI.CacheHits + ", " + AI.CacheAccesses);
             return;
