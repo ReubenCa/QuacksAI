@@ -20,9 +20,10 @@ namespace Tests
         public void TimeGames()
         {
             const int MaxTokenTypes = 5;
-            const int TrialsPerType = 2;
+            const int TrialsPerType = 10;
             const int Tokens = 15;
             const bool loggames = false;
+            const bool AllowBlue = true;
             StringBuilder sb = new StringBuilder(4000);
             sb.AppendLine("Caching: " + Parameters.Caching.ToString() + "\nShared Caching: " + Parameters.SharedCaching);
          
@@ -32,7 +33,7 @@ namespace Tests
             {
                 for (int i = 0; i < TrialsPerType; i++)
                 {
-                    List<Token> startbag = TestUtilities.CreateRandomStaringBag(TokenTypes, Tokens);
+                    List<Token> startbag = TestUtilities.CreateRandomStaringBag(TokenTypes, Tokens, AllowBlue);
                     AIDynamicBrewingParameters DBP = new AIDynamicBrewingParameters((float)Consts.r.NextDouble()*5, (float)Consts.r.NextDouble(),(float)Consts.r.NextDouble()*3);
                     AI ai = new AI(DBP, new AIStaticBrewingParameters());
                     PlayerBrewData PBD = new PlayerBrewData(startbag, new List<Token>(), 1, 0);
@@ -45,6 +46,7 @@ namespace Tests
                 if (AI.Cache_Stats)
                 {
                     sb.AppendLine("Cache Accesses: " + AI.CacheAccesses + "\tCache Hits: " + AI.CacheHits + "\tCache Misses: " + AI.CacheMisses + "Hit Rate: " + ((100f) * (float)(AI.CacheHits) / (float)(AI.CacheAccesses)).ToString() + "%");
+                    sb.AppendLine("CacheHitsOnBlue: " + AI.CacheHitsOnBlue);
                     AI.ResetCacheStats();
                 }
             }
@@ -52,15 +54,21 @@ namespace Tests
            sb.AppendLine("\n--------------\n");
             const string logpath = "PreviousTimeTestOutput.txt";
 
-            StreamReader sr = new StreamReader(logpath);
-            for(int i = 0; i <1000; i++)
+            try
             {
-               sb.AppendLine(sr.ReadLine());
-                if (sr.EndOfStream)
-                    break;
+                StreamReader sr = new StreamReader(logpath);
+                for (int i = 0; i < 1000; i++)
+                {
+                    sb.AppendLine(sr.ReadLine());
+                    if (sr.EndOfStream)
+                        break;
+                }
+                sr.Close();
             }
-            sr.Close();
+            catch (Exception e)
+            {
 
+            }
             Console.WriteLine(sb.ToString());
             StreamWriter sw = new StreamWriter(logpath);
             sw.Write(sb.ToString());

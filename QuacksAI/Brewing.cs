@@ -5,13 +5,14 @@ using System.Linq;
 namespace QuacksAI
 {
     public partial class AI : IBrew
-        //Has an interace for brewing and buying to allow for easy UI that can also be made for players
+    //Has an interace for brewing and buying to allow for easy UI that can also be made for players
     {
 #if CACHE_STATS
         public const bool Cache_Stats = Parameters.Caching;
         public static long CacheAccesses = 0;
         public static long CacheMisses = 0;
         public static long CacheHits = 0;
+        public static long CacheHitsOnBlue = 0;
         public static void ResetCacheStats()
         { CacheAccesses = 0; CacheMisses = 0; CacheAccesses = 0; }
 #else
@@ -120,6 +121,8 @@ namespace QuacksAI
                 {
 #if CACHE_STATS
                     CacheHits++;
+                    if (Key.Item8 > 0)
+                        CacheHitsOnBlue++;
 #endif
                     Brew = Result.Item2;
                     return Result.Item1;
@@ -135,7 +138,13 @@ namespace QuacksAI
             if (Data.BlueLast > 0)
             {
                 Brew = null;
-                return GetExpectedScoreFromBlue(Data);
+                //NEVER ADDS TO CACHE
+                float result = GetExpectedScoreFromBlue(Data);
+                if(Caching)
+                {
+                    Cache.Add(Key, (result, null));
+                }
+                return result;
 
             }
                 
@@ -181,7 +190,7 @@ namespace QuacksAI
         /// <returns></returns>
         private float GetExpectedScoreFromBlue(PlayerBrewData Data)
         {
-
+            
 
             int BlueCount = Data.BlueLast;
             PlayerBrewData DataIfNone = new PlayerBrewData(Data.tokensinbag, Data.PlacedTokens, Data.CurrentTile, -1);
@@ -325,8 +334,8 @@ namespace QuacksAI
                 if(Bag.Count > 1)
                     GreensLastTwo += Bag[Bag.Count - 2].Color == TokenColor.green ? 1 : 0;
             }
-
-            return (Bag, RubyWeight, MoneyWeight, VPWeight, AdjustedOrangesOnBoard, WhiteLast, GreensLastTwo, PBD.BlueLast);
+            int BlueLast = Math.Max(0, PBD.BlueLast);
+            return (Bag, RubyWeight, MoneyWeight, VPWeight, AdjustedOrangesOnBoard, WhiteLast, GreensLastTwo, BlueLast);
         }
     
     }

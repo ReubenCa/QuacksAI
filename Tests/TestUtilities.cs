@@ -8,7 +8,7 @@ namespace Tests
 {
     internal static class TestUtilities
     {
-        public static Token RandomTokenGenerator(bool AllowWhites)
+        public static Token RandomTokenGenerator(bool AllowWhites, bool AllowBlues = true)
         {
             int[] vals = new int[] { 1, 2, 4 };
             Type type = typeof(TokenColor);
@@ -19,18 +19,18 @@ namespace Tests
             {
                 int index = Consts.r.Next(values.Length);
                 color = (TokenColor)values.GetValue(index);
-            } while (!AllowWhites && color == TokenColor.white);
+            } while ((!AllowWhites && color == TokenColor.white) || (!AllowBlues && color == TokenColor.blue));
             if (color == TokenColor.white)
                 return new Token(color, Consts.r.Next(0, 4));
             return new Token(color, vals[Consts.r.Next(0, vals.Length)]);
         }
 
-        public static List<Token> CreateRandomStaringBag(int NonWhiteTokenTypes, int NonWhiteTokens)
+        public static List<Token> CreateRandomStaringBag(int NonWhiteTokenTypes, int NonWhiteTokens, bool AllowBlues = true)
         {
             List<Token> bag = new List<Token>();
             Token[] types = new Token[NonWhiteTokenTypes];
             for (int i = 0; i < types.Length; i++)
-                types[i] = RandomTokenGenerator(false);
+                types[i] = RandomTokenGenerator(false, AllowBlues);
             for (int i = 0; i < NonWhiteTokenTypes; i++)
                 bag.Add(types[i]);
             for(int i = bag.Count; i < NonWhiteTokens; i++)
