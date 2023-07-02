@@ -16,6 +16,8 @@ namespace GameRules
             throw new Exception("This Player Does not support Blue 1 Effects");
         }
 
+        
+
 
     }
 

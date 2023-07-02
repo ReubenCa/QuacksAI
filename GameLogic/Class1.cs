@@ -1,6 +1,6 @@
 ﻿namespace GameLogic
 {
-    public class Class1
+    public static class Board
     {
 
     }
